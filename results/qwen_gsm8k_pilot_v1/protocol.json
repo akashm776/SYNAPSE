@@ -1,0 +1,53 @@
+{
+  "alpha": 0.01,
+  "backend": "hf",
+  "batch_size": 4,
+  "checkpoint_interval": 10,
+  "dataset": "openai/gsm8k",
+  "dataset_revision": "main",
+  "device": "cuda",
+  "horizons": [
+    1,
+    5,
+    20
+  ],
+  "layer": 14,
+  "lora_alpha": 16,
+  "lr": 0.0001,
+  "max_grad_norm": 1.0,
+  "max_length": 512,
+  "max_new_tokens": 32,
+  "meta_batch_size": 1,
+  "meta_episodes": 200,
+  "min_memory_headroom_gb": 4.0,
+  "model": "Qwen/Qwen2.5-1.5B",
+  "model_revision": "main",
+  "outer_batch_size": 1,
+  "outer_lr": 0.001,
+  "rank": 8,
+  "require_a100": true,
+  "seed_triples": [
+    [
+      101,
+      11,
+      789
+    ],
+    [
+      102,
+      22,
+      2026
+    ],
+    [
+      103,
+      33,
+      31415
+    ]
+  ],
+  "split_seed": 1701,
+  "states": [
+    100,
+    500
+  ],
+  "tau": 0.1,
+  "weight_decay": 0.0
+}

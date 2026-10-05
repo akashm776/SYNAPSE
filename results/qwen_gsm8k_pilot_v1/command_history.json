@@ -1,0 +1,27 @@
+[
+  {
+    "command": "preflight",
+    "completed": true,
+    "elapsed_wall_seconds": 42.482421074000285
+  },
+  {
+    "command": "run",
+    "completed": true,
+    "elapsed_wall_seconds": 50406.134200157
+  },
+  {
+    "command": "report",
+    "completed": false,
+    "elapsed_wall_seconds": 34219.694134195
+  },
+  {
+    "command": "report",
+    "completed": false,
+    "elapsed_wall_seconds": 10.719622284996149
+  },
+  {
+    "command": "report",
+    "completed": true,
+    "elapsed_wall_seconds": 9408.755652054999
+  }
+]

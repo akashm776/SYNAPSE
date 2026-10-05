@@ -1,0 +1,43 @@
+{
+  "source_repository": "https://github.com/akashm776/SynLess",
+  "source_commit": "34f8060c40f5842910ef0dda3d5281ceab0a1f4a",
+  "original_artifact_sha256": {
+    "development_lock.json": "62c330ede9441fe9673763581054d9d217621c10736a4e0039caa10a4b505b60",
+    "summary.json": "3bd4396a6b9c367871121d14cd83189598917a8c46566bf93304aca10e85203f",
+    "REPORT.md": "f8d8335fd81f27d8ba78525804cb3c77f16b0dc8f89d8fc01e217f6a7fa65ba3",
+    "development_summary.json": "2a8c897c48c4854f0b628f29334352795cf10b9c24b8ede2eaca21ae2d746ec5",
+    "command_history.json": "daf3ce9a28eada4bdf247233ad588708e4cb28d34d4a51ede73383f1fb578e2b",
+    "manifest.json": "2fbe6631ccb37c8b4694442d6dbbf7e4230fcf6176003220fa9fd746a02bab58",
+    "protocol.json": "d986e0d0c9fd32d0fdedb300d97fa52ffe42e8f66c5a190485e73a1612e782e5",
+    "preflight.json": "fdce7308f2bbd26569c121c3193687d8f153e15de4414b9608dce24e4efc7147"
+  },
+  "generator_export_sha256": {
+    "generator_histories/seed_2026_global_rank_mixture.json": "ab9727b4fb6668a51151c911469e96d4f585d924b0c4c7d5128c487ee3b67a78",
+    "generator_histories/seed_2026_learned_barycenter.json": "a260bde80642536bf1c95d4b91ade762de48032c498f3e14d14b47abdf98e155",
+    "generator_histories/seed_2026_learned_loss_reweighting.json": "74b428802f345cc9ea691a12c81b88ce623ab1e70353ab976bc7e89d0f5c4106",
+    "generator_histories/seed_31415_global_rank_mixture.json": "70326cbb3b401ee69aee40df60e191a75aadac76160084790c65b2f31454f936",
+    "generator_histories/seed_31415_learned_barycenter.json": "f3c5fc05140a5eadcc8019629ccf7f37a7c1ae66ef5a8916e601f17fd209d68e",
+    "generator_histories/seed_31415_learned_loss_reweighting.json": "9bc5c5d4ce1023bedb3b7fb8148dd84ca9088100c5f06e3198b4249d89931d6c",
+    "generator_histories/seed_789_global_rank_mixture.json": "c3296b39943d95a8d82dae5b23839606f42ae0d7b09826b03db1022c8edd1af5",
+    "generator_histories/seed_789_learned_barycenter.json": "503e6668bff57ec9c0fd6c8f509b82a34e50fd159021d35a500f822f136ee9f1",
+    "generator_histories/seed_789_learned_loss_reweighting.json": "c1ccc7cd3140814307b2b15f21400aaad55ddb20439ce5f042328c704b188d3d"
+  },
+  "migrated_source_sha256": {
+    "synapse/llm/__init__.py": "aa096e886f64852114b6a6c88733cc702ccdb2a196f8683e34139511f04fd7a3",
+    "synapse/llm/core.py": "4d2710f70bf4a3d46b93c2a94eec1d0f8b8d2e9fb110af33947a08d7e67f1de9",
+    "synapse/llm/model.py": "d09795fa0465e8f0c34b8b220080a2f4c408de042fbe021d311ce8bc6d97734c",
+    "synapse/llm/experiment.py": "de38cf3fe1fa6d3271e75326e274e3b90a54bab285c2b05942e3222ccf4d8fc8",
+    "synapse/llm/cli.py": "15824593c2c5d6542a44cf598da8a8f0e48bbfe1cc544a4fef714190d28fd88d",
+    "synapse/llm/data.py": "d0e7451c7c222e168ea3db0146a683428f7a1032e09fb082e70078d29b8edc21"
+  },
+  "checkpoint_audit": {
+    "checked": 126,
+    "mismatched": 0,
+    "missing": 0
+  },
+  "omitted": [
+    "model and optimizer .pt files",
+    "raw and tokenized dataset records",
+    "credentials"
+  ]
+}

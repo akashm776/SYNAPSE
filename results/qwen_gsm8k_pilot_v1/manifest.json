@@ -1,0 +1,80 @@
+{
+  "attention": "eager",
+  "data_sha256": "a30d0b430f2d07ffd3412ffeb3e5c13c0f218301d644f6cd932666620897cf2c",
+  "git_commit": "34f8060c40f5842910ef0dda3d5281ceab0a1f4a",
+  "identity": {
+    "config": {
+      "alpha": 0.01,
+      "backend": "hf",
+      "batch_size": 4,
+      "checkpoint_interval": 10,
+      "dataset": "openai/gsm8k",
+      "dataset_revision": "main",
+      "device": "cuda",
+      "horizons": [
+        1,
+        5,
+        20
+      ],
+      "layer": 14,
+      "lora_alpha": 16,
+      "lr": 0.0001,
+      "max_grad_norm": 1.0,
+      "max_length": 512,
+      "max_new_tokens": 32,
+      "meta_batch_size": 1,
+      "meta_episodes": 200,
+      "min_memory_headroom_gb": 4.0,
+      "model": "Qwen/Qwen2.5-1.5B",
+      "model_revision": "main",
+      "outer_batch_size": 1,
+      "outer_lr": 0.001,
+      "rank": 8,
+      "require_a100": true,
+      "seed_triples": [
+        [
+          101,
+          11,
+          789
+        ],
+        [
+          102,
+          22,
+          2026
+        ],
+        [
+          103,
+          33,
+          31415
+        ]
+      ],
+      "split_seed": 1701,
+      "states": [
+        100,
+        500
+      ],
+      "tau": 0.1,
+      "weight_decay": 0.0
+    },
+    "device": "NVIDIA A100-SXM4-40GB",
+    "python": "3.13.15",
+    "source_sha256": "50aed4b02b718b4050c97d6e5236eb89b20caae64b367148c694bb0c24832d02",
+    "versions": {
+      "accelerate": "1.2.1",
+      "datasets": "2.21.0",
+      "huggingface-hub": "0.36.2",
+      "numpy": "2.3.5",
+      "tokenizers": "0.22.2",
+      "torch": "2.9.1+cu128",
+      "transformers": "4.57.3"
+    }
+  },
+  "precision": "frozen bf16 base; fp32 LoRA/generator/moments",
+  "protocol_version": "0.2",
+  "research_evidence": true,
+  "resolved": {
+    "dataset_revision": "740312add88f781978c0658806c59bc2815b9866",
+    "model_revision": "8faed761d45a263340a0528343f099c05c9a4323"
+  },
+  "status": "complete"
+}
