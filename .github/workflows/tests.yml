@@ -15,3 +15,4 @@ jobs:
       - run: synapse preflight --config configs/llm_smoke.json --output runs/smoke
       - run: synapse run --config configs/llm_smoke.json --output runs/smoke
       - run: synapse report --config configs/llm_smoke.json --output runs/smoke
+      - run: synapse-audit --source runs/smoke --output runs/audit_smoke --config configs/audit_smoke.json

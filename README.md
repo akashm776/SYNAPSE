@@ -96,3 +96,14 @@ revision and environment, **not this renamed notebook**. See [migration and resu
 Next work is numerical and optimization diagnosis, not an automatic larger-model
 experiment. Test outcomes are final for this protocol; future experiments need
 explicitly separate protocols and evaluation plans.
+
+## Next experiment: bounded generator audit
+
+The [A/M-only diagnostic](docs/GENERATOR_AUDIT.md) is implemented separately from
+the unchanged pilot engine. It reuses saved teachers to measure repeatability,
+bf16/fp32 arithmetic sensitivity, near-uniform perturbations, and tiny fixed-set
+generator fitting. No D/test decoding or full retraining is needed.
+
+[Open the audit A100 notebook](https://colab.research.google.com/github/akashm776/SYNAPSE/blob/main/colabs/SYNAPSE_Generator_Audit_A100.ipynb).
+Real-A100 audit outcomes are not yet available; the original pilot's preflight
+does not establish resource fit for the new fp32 condition.

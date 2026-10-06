@@ -10,7 +10,11 @@
 - Locked development comparator and all 126 official-test evaluations.
 - Archived negative/mixed results and migration from SynLess to SYNAPSE.
 
-## Next diagnostics — proposed, not run
+## Next diagnostics — implemented, not yet run on A100
+
+The [bounded generator audit](GENERATOR_AUDIT.md) implements the first three
+checks below, with offline correctness/resume tests and a separate A100 notebook.
+It does not alter the completed pilot or claim a diagnostic outcome in advance.
 
 - Audit near-uniform generator fitting: feature variation, parameter changes,
   gradient scales, and sensitivity of the functional update.
