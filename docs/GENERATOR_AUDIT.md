@@ -126,9 +126,11 @@ two Colab sessions against one audit folder.
 
 The script does not silently lower precision/batch size after an OOM. Preserve
 the failed audit and revise the diagnostic configuration in a new output folder.
-The v1 A100 audit took 193 seconds, but corrected v2 has extra virtual-step
-measurements and has not yet been run on A100. Do not treat the v1 timing as a
-guarantee or the old pilot preflight as a resource check of v2.
+The corrected user-supplied v2 A100 audit completed in 234.3 seconds with 40/40
+bitwise-identical repeat comparisons. It found substantial bf16 meta/ordinary
+path differences and much smaller fp32 discrepancies, but only tiny fp32
+fixed-set fitting changes. See the [next learnability check](LEARNABILITY_CHECK.md)
+for the resulting diagnostic design. This observed runtime is not a guarantee.
 
 ## Offline smoke
 

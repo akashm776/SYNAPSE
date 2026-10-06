@@ -97,7 +97,7 @@ Next work is numerical and optimization diagnosis, not an automatic larger-model
 experiment. Test outcomes are final for this protocol; future experiments need
 explicitly separate protocols and evaluation plans.
 
-## Next experiment: bounded generator audit
+## Numerical audit and next learnability check
 
 The [A/M-only diagnostic](docs/GENERATOR_AUDIT.md) is implemented separately from
 the unchanged pilot engine. It reuses saved teachers to measure repeatability,
@@ -107,5 +107,15 @@ generator fitting. No D/test decoding or full retraining is needed.
 [Open the audit A100 notebook](https://colab.research.google.com/github/akashm776/SYNAPSE/blob/main/colabs/SYNAPSE_Generator_Audit_A100.ipynb).
 Use **audit v2** and a new output folder: v1 ran on A100 but inadvertently cast
 Qwen's positional-frequency buffer. V2 preserves buffers and adds explicit
-virtual/real update comparisons. Corrected A100 outcomes are still pending;
-the original pilot and v1 outputs should remain unchanged.
+virtual/real update comparisons. The user-supplied v2 A100 run is complete:
+repeatability is exact on its 40 comparisons, but bf16 meta/ordinary gradients
+differ materially. Fp32 greatly reduces that discrepancy; its tiny fixed-set
+fitting changes still do not establish meaningful learning. The original pilot
+and prior audit outputs remain unchanged.
+
+The next [fp32 learnability diagnostic](docs/LEARNABILITY_CHECK.md) compares
+shared direct logits, per-pair direct logits, and the feature scorer on the same
+fixed A/M pairs, with coarse mixture scans and actual-update checks. It is
+implemented and CPU-tested, **not yet run on A100**, and does not evaluate D/test.
+
+[Open the learnability A100 notebook](https://colab.research.google.com/github/akashm776/SYNAPSE/blob/main/colabs/SYNAPSE_Learnability_A100.ipynb).

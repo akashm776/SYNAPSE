@@ -25,5 +25,16 @@ source immutability and reporting exclusion. Its smoke command is also exercised
 in CI. V2 regression checks preserve buffer dtype/values through repeated
 precision switches, bound diagnostic cosines, and compare direct virtual/real
 updates. The v1 A100 run exposed numerical sensitivity but also a buffer-casting
-bug in the audit. Corrected v2 A100 results remain pending. The original six-file
-engine and archived pilot are unchanged.
+bug in the audit. Corrected v2 A100 outputs have now been inspected: 40/40 exact
+repeat comparisons and much smaller fp32 virtual/real discrepancies, but tiny
+fixed-set fitting changes. The original six-file engine and archive are unchanged.
+
+## Separate fp32 learnability check
+
+Five additional tests cover settings, raw-slot/per-pair semantics, finite-difference
+verification of live second derivatives to direct logits, full-set gradient
+averaging before the outer optimizer step, and exact interrupted fitting resume.
+End-to-end guards check source immutability, A/M-only model inputs, fp32 parameters,
+virtual/real parity, changed-identity rejection, and completed-run no-op resume.
+The independent CLI smoke also runs in CI. These are implementation checks;
+the new diagnostic's A100 outcomes remain pending.

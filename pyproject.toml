@@ -16,6 +16,7 @@ test = ["pytest>=8"]
 [project.scripts]
 synapse = "synapse.llm.cli:main"
 synapse-audit = "synapse.audit:main"
+synapse-learnability = "synapse.learnability:main"
 
 [tool.setuptools.packages.find]
 include = ["synapse*"]

@@ -10,11 +10,17 @@
 - Locked development comparator and all 126 official-test evaluations.
 - Archived negative/mixed results and migration from SynLess to SYNAPSE.
 
-## Next diagnostics — implemented, not yet run on A100
+## Numerical audit completed; learnability check implemented
 
-The [bounded generator audit](GENERATOR_AUDIT.md) implements the first three
-checks below, with offline correctness/resume tests and a separate A100 notebook.
-It does not alter the completed pilot or claim a diagnostic outcome in advance.
+The corrected [bounded generator audit](GENERATOR_AUDIT.md) has run on A100.
+Its bitwise-repeatable outputs show substantial bf16 meta/ordinary-path
+differences and much smaller fp32 discrepancies, but no convincing fixed-set
+generator fit. This does not establish the cause of every pilot outcome.
+
+The next [fp32 learnability check](LEARNABILITY_CHECK.md) is implemented with
+offline correctness/resume tests and a separate A100 notebook. It compares free
+shared/per-pair logits with the original feature scorer and scans coarse mixtures.
+Its A100 results remain pending. Neither diagnostic alters the completed pilot.
 
 - Audit near-uniform generator fitting: feature variation, parameter changes,
   gradient scales, and sensitivity of the functional update.
