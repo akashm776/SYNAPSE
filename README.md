@@ -125,6 +125,15 @@ not establish a useful fit or prove uniform optimal.
 Next is the [fixed-mixture auxiliary-strength check](docs/STRENGTH_CHECK.md):
 fp32 one-step updates at five strengths, compared against native and uniform,
 with clipping, gradient/update contrasts and virtual/real parity. No generator
-fitting or D/test evaluation. Implemented; its A100 outcomes are pending.
+fitting or D/test evaluation. Its A100 run found a measurable response at alpha 1,
+but the mean benefit was concentrated in one pair and mixing did not consistently
+beat single-candidate controls. This is not a fine-tuning gain.
 
 [Open the strength A100 notebook](https://colab.research.google.com/github/akashm776/SYNAPSE/blob/main/colabs/SYNAPSE_Strength_A100.ipynb).
+
+Next: [replicate on 16 diagnostic-fresh A/M pairs](docs/FRESH_STRENGTH_CHECK.md),
+excluding both previously inspected pairs, with native/uniform/single-candidate
+controls and outlier-sensitive summaries. Implemented; A100 results pending.
+“Fresh” does not mean historically unseen by the original training.
+
+[Open the fresh-strength A100 notebook](https://colab.research.google.com/github/akashm776/SYNAPSE/blob/main/colabs/SYNAPSE_Fresh_Strength_A100.ipynb).

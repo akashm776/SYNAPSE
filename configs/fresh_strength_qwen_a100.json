@@ -1,0 +1,7 @@
+{
+  "learner_seed": 789,
+  "states": [100, 500],
+  "pairs": 16,
+  "alphas": [0, 0.01, 0.1, 1.0],
+  "max_seconds": 1800
+}

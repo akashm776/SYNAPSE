@@ -72,7 +72,10 @@ python -m synapse.strength --source /path/to/complete/llm_qwen_v2 \
   --output /path/to/separate/strength_v1 --config configs/strength_qwen_a100.json
 ```
 
-Installed alias: `synapse-strength`. A100 runtime has **not been measured**.
+Installed alias: `synapse-strength`. The user-supplied A100 run completed in
+**490.4 seconds (8.2 minutes)**; this is not a timing guarantee. It found much
+larger effects at alpha 1, but one pair dominated the mean improvement. See the
+[fresh-pair replication](FRESH_STRENGTH_CHECK.md) for the next bounded test.
 The 30-minute budget is per invocation, checked between groups, not a hard timeout.
 Completed groups are skipped on resume; an interrupted group replays. Record and
 restore the exact Git revision/environment. Changed inputs/code/settings reject

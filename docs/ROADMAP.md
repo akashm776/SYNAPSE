@@ -10,7 +10,7 @@
 - Locked development comparator and all 126 official-test evaluations.
 - Archived negative/mixed results and migration from SynLess to SYNAPSE.
 
-## Numerical and learnability audits completed; strength check implemented
+## Diagnostics completed; fresh-pair replication implemented
 
 The corrected [bounded generator audit](GENERATOR_AUDIT.md) has run on A100.
 Its bitwise-repeatable outputs show substantial bf16 meta/ordinary-path
@@ -26,7 +26,14 @@ alters the completed pilot.
 
 The [fixed-mixture strength check](STRENGTH_CHECK.md) is the next bounded test:
 vary alpha while measuring actual and simulated updates, with native/uniform
-controls and no generator fitting. Its A100 results remain pending.
+controls and no generator fitting. Its A100 run is complete: alpha 1 produces
+measurable loss changes, but mean improvements are dominated by one pair and
+do not establish a mixture advantage.
+
+The [fresh-pair replication](FRESH_STRENGTH_CHECK.md) excludes both inspected
+pairs and repeats fixed native/uniform/single-candidate comparisons on 16 pairs.
+It reports medians, sign counts and leave-one-out means, with no generator fitting
+or D/test evaluation. Its A100 outcomes remain pending.
 
 - Audit near-uniform generator fitting: feature variation, parameter changes,
   gradient scales, and sensitivity of the functional update.

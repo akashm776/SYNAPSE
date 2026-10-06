@@ -46,4 +46,13 @@ Strength checks cover alpha-grid safety, fixed recipes, native/uniform repeats,
 actual zero-alpha learned-arm equivalence, linear scaling of unclipped auxiliary
 gradients, A/M-only fp32 model inputs, source immutability and exact group-level
 resume. The independent CLI smoke runs in CI. The new strength diagnostic's
-A100 outcomes remain pending; no alpha or recipe is automatically selected.
+A100 run is complete; no alpha or recipe is automatically selected.
+
+## Diagnostic-fresh strength replication
+
+Three additional tests verify component-level exclusion of the two old pairs,
+deterministic no-replacement sampling and insufficient-data rejection; outlier
+statistics; and exact resumed/uninterrupted output with only fresh A/M model
+inputs. Checks cover zero/repeat controls, source immutability, fp32, mean-single
+contrasts and resume identity. Its standalone CLI is also exercised in CI.
+The fresh-pair A100 outcomes remain pending.
