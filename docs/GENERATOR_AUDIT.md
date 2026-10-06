@@ -1,10 +1,24 @@
-# Generator-learning and numerical-stability audit v1
+# Generator-learning and numerical-stability audit v2
 
 [Overview](../README.md) · [Original pilot results](QWEN_PILOT_RESULTS.md)
 
 This is a bounded diagnostic, not a new efficacy benchmark. The completed pilot
 and its scientific code are unchanged. The audit lives in `synapse/audit.py`,
 outside the source-hashed historical `synapse/llm/` engine.
+
+## Correction to v1
+
+Audit revision `84beba6` cast all floating model buffers when switching precision.
+Qwen's rotary positional-frequency buffer normally remains fp32; casting it also
+changes positional calculations. This was an audit bug, not a change to the
+original pilot. The first A100 audit completed, but its numerical results are
+not a clean explanation of that pilot. Preserve those files as v1 diagnostics.
+
+V2 leaves every model buffer unchanged, records dtype/value fingerprints, and
+checks them through precision switches and at completion. It also adds direct
+virtual/real parity checks and uses fp64 reductions for diagnostic vector
+comparisons (v1's fp32 cosine reductions could slightly exceed one). These fp64
+reductions do not change the learner or optimization arithmetic.
 
 ## Questions
 
@@ -24,6 +38,7 @@ outside the source-hashed historical `synapse/llm/` engine.
   Candidate positions are the original deterministic order, not hardness ranks.
 - Two restored-state repeats per condition, in bf16 and fp32: 80 real one-step
   updates total. Each update is discarded; teacher weights and AdamW state reset.
+  Each trial also computes two virtual updates from that same parent, described below.
 - Four fresh-generator fitting jobs (two states × two precisions), 20 steps each,
   cycling those same two A/M pairs. Original one-step meta-objective, AdamW outer
   LR .001, gradient clipping 1. No hyperparameter search or adaptive stopping.
@@ -41,6 +56,8 @@ exported. The A/M set is intentionally reused for before/after fitting diagnosti
 Both arms use the **same bf16-rounded frozen base weights**. The fp32 arm promotes
 those values to fp32; adapters and moments remain fp32 in both. This isolates
 arithmetic precision without substituting a different underlying pretrained base.
+Model buffers retain their original loaded dtype and values, including fp32
+rotary frequencies; their fingerprints are stored in `model_buffers.json`.
 It does not recover the original full-precision weights or implement a fp64
 reference. Eager attention, TF32 off, and deterministic algorithms are recorded.
 Same-shape future-token causality is checked at each state/pair/precision.
@@ -57,6 +74,12 @@ The source protocol and six-file scientific-engine hash must match the pilot.
 - Gradient/update norms and absolute, relative, cosine, and bitwise comparisons.
 - Repeated-trial differences; learned/perturbed versus uniform; fp32 versus bf16.
 - Actual post-update correct-answer M loss and differences versus controls.
+- Direct virtual/real parameter-update and M-loss differences on every trial:
+  **same_gradient** feeds the same unclipped gradient tensors and parent AdamW
+  moments to functional AdamW and real AdamW, isolating optimizer arithmetic;
+  **meta_path** separately recomputes the differentiable `create_graph=True`
+  gradient, then the functional step, as in generator fitting. Its gradient is
+  compared with the real path too. Both paths start from the same restored state.
 - Per-example weights and candidate-feature variation. The shared q–p feature
   is constant across candidates by construction; zero variation there is expected.
 - Fixed-set virtual M loss before/after fitting; per-step meta-gradients, actual
@@ -80,12 +103,12 @@ as untouched validation for recipes chosen from these diagnostics.
 [Open the audit notebook](https://colab.research.google.com/github/akashm776/SYNAPSE/blob/main/colabs/SYNAPSE_Generator_Audit_A100.ipynb).
 It reads your complete original Drive run at
 `/content/drive/MyDrive/SynLess/runs/llm_qwen_v2` and writes separately to
-`/content/drive/MyDrive/SYNAPSE/audits/qwen_generator_v1`.
+`/content/drive/MyDrive/SYNAPSE/audits/qwen_generator_v2`.
 Do not rerun the original pilot preflight, training, or report.
 
 ```bash
 synapse-audit --source /path/to/complete/llm_qwen_v2 \
-  --output /path/to/separate/audit_v1 --config configs/audit_qwen_a100.json
+  --output /path/to/separate/audit_v2 --config configs/audit_qwen_a100.json
 ```
 
 Equivalent: `python -m synapse.audit ...`. Requires the full source `data.json`,
@@ -96,14 +119,16 @@ After a pause/restart, use the same audit code/config/runtime/output and rerun.
 Completed pair groups are skipped; fitting saves generator/optimizer state every
 step. An interrupted pair group or unsaved fit step replays. `--max-units N`
 provides a deterministic pause for testing. Source changes or audit identity
-changes reject resume. Output cannot equal, contain, or lie inside the source
+changes reject resume. In particular v2 cannot resume into a v1 folder.
+Output cannot equal, contain, or lie inside the source
 run. A local process lock prevents same-machine concurrent writers; do not run
 two Colab sessions against one audit folder.
 
 The script does not silently lower precision/batch size after an OOM. Preserve
 the failed audit and revise the diagnostic configuration in a new output folder.
-Real A100 audit feasibility/runtime remain to be measured; the old pilot's
-preflight was not a resource check of this new fp32 audit.
+The v1 A100 audit took 193 seconds, but corrected v2 has extra virtual-step
+measurements and has not yet been run on A100. Do not treat the v1 timing as a
+guarantee or the old pilot preflight as a resource check of v2.
 
 ## Offline smoke
 

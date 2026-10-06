@@ -12,7 +12,7 @@ import time
 import torch
 from torch import nn
 
-from .llm.core import Generator, finite_gradients
+from .llm.core import Generator, finite_gradients, functional_adamw
 from .llm.data import digest, scheduled_batch
 from .llm.experiment import (atomic_json, atomic_torch, cpu, digest_tensor_tree,
     file_hash, hardware, load_checkpoint, read_json, restore, run_lock, snapshot,
@@ -78,11 +78,19 @@ def vector(tensors, parameters):
 
 def difference(a, b):
     # b is the named reference. Relative error alone is misleading near zero.
+    equal = bool(torch.equal(a, b))
+    a, b = a.double(), b.double()
     delta, na, nb = a-b, float(a.norm()), float(b.norm())
     return {'l2': float(delta.norm()), 'max_abs': float(delta.abs().max()),
             'reference_l2': nb, 'relative_l2': float(delta.norm())/max(nb, 1e-30),
-            'cosine': float(torch.dot(a, b)/(na*nb)) if na and nb else None,
-            'bitwise_equal': bool(torch.equal(a, b))}
+            'cosine': max(-1.,min(1.,float(torch.dot(a, b)/(na*nb)))) if na and nb else None,
+            'bitwise_equal': equal}
+
+
+def buffer_fingerprint(learner):
+    """Include nonpersistent buffers such as rotary inv_freq; never cast them."""
+    return {name:{'dtype':str(b.dtype),'shape':list(b.shape),'sha256':digest_tensor_tree(b)}
+            for name,b in learner.named_buffers()}
 
 
 def set_precision(learner, precision):
@@ -92,9 +100,8 @@ def set_precision(learner, precision):
         for p in learner.parameters():
             if not p.requires_grad:
                 p.data = p.data.to(dtype)
-        for b in learner.buffers():
-            if b.is_floating_point():
-                b.data = b.data.to(dtype)
+        # Model-owned buffers (notably Qwen rotary frequencies) retain their
+        # loaded dtype and values. Casting them changes the model, not just GEMMs.
     assert all(p.dtype == torch.float32 for p in learner.trainable().values())
 
 
@@ -113,6 +120,15 @@ def trial(learner, optimizer, parent, inner, outer, tokenizer, config, probe):
     if not finite_gradients(gradients):
         raise FloatingPointError('Nonfinite audit gradient')
     full_gradient = vector(gradients, params)
+    # Isolate optimizer arithmetic: exact same un-clipped gradients and moments
+    # feed functional AdamW and the real optimizer; evaluate before mutating p.
+    with torch.no_grad():
+        virtual = functional_adamw(learner.trainable(),gradients,optimizer,config['max_grad_norm'])
+        same_gradient_delta = torch.cat([(p.cpu()-parent['parameters'][name]).flatten()
+                                       for name,p in virtual.items()])
+        virtual_loss,_ = objective(learner,outer,tokenizer,config,parameters=virtual)
+        same_gradient_loss = float(virtual_loss)
+    del virtual,virtual_loss
     for p, g in zip(params, gradients):
         p.grad = g
     norm = torch.nn.utils.clip_grad_norm_(params, config['max_grad_norm'], error_if_nonfinite=True)
@@ -128,6 +144,26 @@ def trial(learner, optimizer, parent, inner, outer, tokenizer, config, probe):
     if probe is not None:
         result.update(probe.diagnostics())
     restore(learner, optimizer, parent)
+    # Separately reproduce the differentiable meta path. Comparing its gradient
+    # with the real path separates create_graph effects from optimizer rounding.
+    total,_ = objective(learner,inner,tokenizer,config,
+                        'native' if probe is None else probe.arm,probe)
+    meta_gradients = torch.autograd.grad(total,params,create_graph=True,allow_unused=True)
+    meta_gradient_vector = vector(meta_gradients,params)
+    meta_parameters = functional_adamw(learner.trainable(),meta_gradients,optimizer,config['max_grad_norm'])
+    meta_delta = torch.cat([(p.detach().cpu()-parent['parameters'][name]).flatten()
+                           for name,p in meta_parameters.items()])
+    meta_loss,_ = objective(learner,outer,tokenizer,config,parameters=meta_parameters)
+    result['virtual_real_parity'] = {
+        'same_gradient':{'update':difference(same_gradient_delta,delta),
+                         'virtual_M_loss':same_gradient_loss,
+                         'M_virtual_minus_real':same_gradient_loss-result['outer_M_loss']},
+        'meta_path':{'gradient':difference(meta_gradient_vector,full_gradient),
+                     'update':difference(meta_delta,delta),'virtual_M_loss':float(meta_loss.detach()),
+                     'M_virtual_minus_real':float(meta_loss.detach())-result['outer_M_loss']}}
+    after=snapshot(learner,optimizer)
+    if any(digest_tensor_tree(after[k])!=digest_tensor_tree(parent[k]) for k in ('parameters','optimizer')):
+        raise RuntimeError('Virtual parity check mutated teacher state')
     return result, {'aux_gradient':aux_gradient, 'update':delta}
 
 
@@ -140,10 +176,19 @@ def write_report(output, results):
     repeated = [r for r in rows if 'vs_first_repeat' in r]
     identical = sum(all(v['bitwise_equal'] for v in r['vs_first_repeat'].values())
                     and r['M_difference_vs_first_repeat']==0 for r in repeated)
-    lines = ['# SYNAPSE numerical and generator-fitting audit', '',
+    lines = ['# SYNAPSE numerical and generator-fitting audit v2', '',
         'A/M-only diagnostic. No D/test evaluation, no generalization claim.', '',
         f'Bitwise-identical repeated gradient/update/M-loss comparisons: {identical}/{len(repeated)}.', '',
-        'The precision comparison promotes the same bf16-rounded frozen weights to fp32; it does not recover full-precision pretrained weights.', '',
+        'Frozen weights are bf16-rounded in both conditions; original model buffers retain their loaded dtype/values. This does not recover full-precision pretrained weights.', '',
+        '## Direct virtual-versus-real update checks', '',
+        '| Arithmetic | Virtual path | Max update L2 difference | Max absolute M-loss difference |',
+        '|---|---|---:|---:|']
+    for precision in ('bf16','fp32'):
+        selected=[r for r in rows if r['precision']==precision and r['repeat']==0]
+        for kind in ('same_gradient','meta_path'):
+            checks=[r['virtual_real_parity'][kind] for r in selected]
+            lines.append(f"| {precision} | {kind} | {max(c['update']['l2'] for c in checks):.9g} | {max(abs(c['M_virtual_minus_real']) for c in checks):.9g} |")
+    lines += ['', '## Fixed-set generator fitting', '',
         '| Teacher state | Arithmetic | Fixed-set virtual M loss before | After | Change |',
         '|---|---|---:|---:|---:|']
     for fit in results['fits']:
@@ -159,9 +204,12 @@ def write_report(output, results):
 def repeatability_group(learner, optimizer, parent, pairs, pair_index, tokenizer, config, audit, trained):
     inner, outer = pairs[pair_index]
     parent_digest = digest_tensor_tree(parent)
+    buffers_before = buffer_fingerprint(learner)
     records, refs = [], {}
     for precision in ('bf16', 'fp32'):
         set_precision(learner, precision)
+        if buffer_fingerprint(learner)!=buffers_before:
+            raise RuntimeError('Precision switch changed model buffers')
         restore(learner, optimizer, parent)
         causality = check_prompt_causality(learner, inner, tokenizer)
         conditions = [('native',None), ('uniform',Probe()), ('learned',Probe(trained))]
@@ -190,7 +238,9 @@ def repeatability_group(learner, optimizer, parent, pairs, pair_index, tokenizer
     assert digest_tensor_tree(parent) == parent_digest
     after = snapshot(learner,optimizer)
     assert all(digest_tensor_tree(after[k]) == digest_tensor_tree(parent[k]) for k in ('parameters','optimizer'))
-    return {'pair_index':pair_index,'records':records}
+    if buffer_fingerprint(learner)!=buffers_before:
+        raise RuntimeError('Audit forward changed model buffers')
+    return {'pair_index':pair_index,'records':records,'buffers':buffers_before,'buffers_unchanged':True}
 
 
 def assess_fit(learner, optimizer, parent, pairs, tokenizer, config, generator):
@@ -257,11 +307,11 @@ def run_audit(source, output, supplied, max_units=None):
     started = time.perf_counter()
     config, manifest, pairs, hashes, triple = load_source(source,audit)
     device_name = hardware(config)
-    identity = {'settings':audit, 'source_files_sha256':hashes, 'data_sha256':manifest['data_sha256'],
+    identity = {'audit_version':2,'settings':audit, 'source_files_sha256':hashes, 'data_sha256':manifest['data_sha256'],
         'pilot_source_sha256':source_hash(), 'audit_source_sha256':file_hash(Path(__file__)),
         'versions':{k:importlib.metadata.version(k) for k in ('torch','transformers','numpy')},
         'python':platform.python_version(), 'device':device_name,
-        'precision_design':'bf16-rounded frozen base; bf16 versus promoted-fp32 arithmetic; fp32 adapters and moments',
+        'precision_design':'bf16-rounded frozen parameters; bf16 versus promoted-fp32 arithmetic; fp32 adapters/moments; model buffers unchanged',
         'tf32':False,'deterministic_algorithms':True,
         'pairs':[{'A_id':i[0]['id'],'M_id':o[0]['id']} for i,o in pairs]}
     units = 0
@@ -279,8 +329,15 @@ def run_audit(source, output, supplied, max_units=None):
             boundary()
             tokenizer = load_tokenizer(config,manifest['resolved'])
             learner = load_learner(config,manifest['resolved'],triple[0])
+            original_buffers=buffer_fingerprint(learner)
+            buffer_path=output/'model_buffers.json'
+            if buffer_path.exists() and read_json(buffer_path)!=original_buffers:
+                raise ValueError('Loaded model buffers differ from prior audit invocation')
+            atomic_json(buffer_path,original_buffers)
             # In tiny tests too, both conditions start from the same bf16 rounding.
             set_precision(learner,'bf16')
+            if buffer_fingerprint(learner)!=original_buffers:
+                raise RuntimeError('Initial precision switch changed model buffers')
             optimizer = make_optimizer(learner,config)
             saved = load_checkpoint(source/f"seed_{audit['learner_seed']}/generators/learned_barycenter.pt")
             trained = Generator('learned_barycenter').to(config['device'])
@@ -357,6 +414,8 @@ def run_audit(source, output, supplied, max_units=None):
             # A second input check detects source writes during this diagnostic.
             if any(file_hash(source/name)!=h for name,h in hashes.items()):
                 raise ValueError('Source files changed during audit')
+            if buffer_fingerprint(learner)!=original_buffers:
+                raise RuntimeError('Audit changed model buffers')
             results = {'repeatability':[read_json(p) for p in sorted(output.glob('state_*/repeatability_*.json'))],
                        'fits':[read_json(p) for p in sorted(output.glob('state_*/fit_*.json'))],
                        'test_evaluated':False,'generalization_evidence':False}

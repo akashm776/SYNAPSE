@@ -19,8 +19,11 @@ not the smoke run. See [results](QWEN_PILOT_RESULTS.md).
 
 ## Separate generator audit
 
-The audit adds five tests for output-path/budget safety, exact-uniform identity
+The audit adds six tests for output-path/budget safety, exact-uniform identity
 and live gradients, controlled precision promotion, and end-to-end resume with
 source immutability and reporting exclusion. Its smoke command is also exercised
-in CI. These are CPU implementation checks; the new bf16/fp32 A100 diagnostic
-has not yet been run. The original six-file engine and archived pilot are unchanged.
+in CI. V2 regression checks preserve buffer dtype/values through repeated
+precision switches, bound diagnostic cosines, and compare direct virtual/real
+updates. The v1 A100 run exposed numerical sensitivity but also a buffer-casting
+bug in the audit. Corrected v2 A100 results remain pending. The original six-file
+engine and archived pilot are unchanged.

@@ -105,5 +105,7 @@ bf16/fp32 arithmetic sensitivity, near-uniform perturbations, and tiny fixed-set
 generator fitting. No D/test decoding or full retraining is needed.
 
 [Open the audit A100 notebook](https://colab.research.google.com/github/akashm776/SYNAPSE/blob/main/colabs/SYNAPSE_Generator_Audit_A100.ipynb).
-Real-A100 audit outcomes are not yet available; the original pilot's preflight
-does not establish resource fit for the new fp32 condition.
+Use **audit v2** and a new output folder: v1 ran on A100 but inadvertently cast
+Qwen's positional-frequency buffer. V2 preserves buffers and adds explicit
+virtual/real update comparisons. Corrected A100 outcomes are still pending;
+the original pilot and v1 outputs should remain unchanged.

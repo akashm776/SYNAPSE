@@ -46,11 +46,29 @@ def test_precision_preserves_adapters_and_rounded_weights():
     config=validate_config(read_json(Path(__file__).parents[1]/'configs/llm_smoke.json'))
     learner=load_learner(config,{},101)
     trainable={k:p.detach().clone() for k,p in learner.trainable().items()}
+    buffers={k:b.clone() for k,b in learner.named_buffers()}
+    fingerprint=audit.buffer_fingerprint(learner)
+    assert buffers and learner.backbone.model.rotary_emb.inv_freq.dtype==torch.float32
+    # Ensure this fixture actually detects the v1 lossy buffer cast.
+    freq=learner.backbone.model.rotary_emb.inv_freq
+    assert not torch.equal(freq,freq.bfloat16().float())
     audit.set_precision(learner,'bf16')
     rounded={k:p.float().detach().clone() for k,p in learner.named_parameters() if not p.requires_grad}
     audit.set_precision(learner,'fp32')
     assert all(torch.equal(p,rounded[k]) for k,p in learner.named_parameters() if not p.requires_grad)
     assert all(p.dtype==torch.float32 and torch.equal(p,trainable[k]) for k,p in learner.trainable().items())
+    for precision in ('bf16','fp32','bf16'):
+        audit.set_precision(learner,precision)
+        assert audit.buffer_fingerprint(learner)==fingerprint
+        assert all(b.dtype==buffers[k].dtype and torch.equal(b,buffers[k]) for k,b in learner.named_buffers())
+
+
+def test_difference_uses_stable_bounded_cosines():
+    x=torch.linspace(-.01,.01,100001)
+    assert audit.difference(x,x)['bitwise_equal']
+    assert audit.difference(x,x)['cosine']==pytest.approx(1.)
+    assert audit.difference(x,-x)['cosine']==pytest.approx(-1.)
+    assert audit.difference(x,torch.zeros_like(x))['cosine'] is None
 
 
 def test_audit_resume_source_immutability_and_no_reporting(source,tmp_path,monkeypatch):
@@ -84,6 +102,17 @@ def test_audit_resume_source_immutability_and_no_reporting(source,tmp_path,monke
     assert a==b
     assert not a['test_evaluated'] and not a['generalization_evidence']
     assert len(a['fits'])==2
+    assert read_json(resumed/'audit_manifest.json')['identity']['audit_version']==2
+    assert read_json(resumed/'model_buffers.json')==a['repeatability'][0]['buffers']
+    assert a['repeatability'][0]['buffers_unchanged']
+    rows=[r for r in a['repeatability'][0]['records'] if 'condition' in r]
+    assert all(set(r['virtual_real_parity'])=={'same_gradient','meta_path'} for r in rows)
+    for r in rows:
+        for check in r['virtual_real_parity'].values():
+            assert check['M_virtual_minus_real']==check['virtual_M_loss']-r['outer_M_loss']
+            if r['precision']=='fp32':
+                assert check['update']['max_abs'] < 1e-6
+                assert abs(check['M_virtual_minus_real']) < 1e-5
     assert all(r['vs_first_repeat']['update']['bitwise_equal'] for r in a['repeatability'][0]['records'] if 'vs_first_repeat' in r)
     assert initial=={str(p.relative_to(source)):file_hash(p) for p in source.rglob('*') if p.is_file()}
     assert (resumed/'AUDIT_REPORT.md').exists()
