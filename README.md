@@ -116,6 +116,15 @@ and prior audit outputs remain unchanged.
 The next [fp32 learnability diagnostic](docs/LEARNABILITY_CHECK.md) compares
 shared direct logits, per-pair direct logits, and the feature scorer on the same
 fixed A/M pairs, with coarse mixture scans and actual-update checks. It is
-implemented and CPU-tested, **not yet run on A100**, and does not evaluate D/test.
+complete on A100: direct weights moved substantially, but none of the six mean
+loss reductions exceeded the diagnostic numerical reference scale. This does
+not establish a useful fit or prove uniform optimal.
 
 [Open the learnability A100 notebook](https://colab.research.google.com/github/akashm776/SYNAPSE/blob/main/colabs/SYNAPSE_Learnability_A100.ipynb).
+
+Next is the [fixed-mixture auxiliary-strength check](docs/STRENGTH_CHECK.md):
+fp32 one-step updates at five strengths, compared against native and uniform,
+with clipping, gradient/update contrasts and virtual/real parity. No generator
+fitting or D/test evaluation. Implemented; its A100 outcomes are pending.
+
+[Open the strength A100 notebook](https://colab.research.google.com/github/akashm776/SYNAPSE/blob/main/colabs/SYNAPSE_Strength_A100.ipynb).

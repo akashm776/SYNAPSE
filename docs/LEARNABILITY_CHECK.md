@@ -100,8 +100,12 @@ extract A/M. No answer decoding, new benchmark, or Llama launch occurs.
 
 The per-invocation 30-minute budget is checked between work units, not a hard
 timeout. A scan of one pair, a full-set outer step, or an assessment can overrun
-the boundary. This new diagnostic has **not yet run on A100**; the prior audit's
-3.9-minute duration is not a timing guarantee. No silent OOM precision fallback.
+the boundary. The user-supplied A100 run completed in **674.7 seconds (11.2 minutes)**.
+This is not a timing guarantee. No silent OOM precision fallback.
+
+In that run, all six mean real-loss reductions were below the descriptive numerical
+reference scales, despite substantial direct-weight movement. See the next
+[fixed-mixture strength diagnostic](STRENGTH_CHECK.md); no efficacy gain is established.
 
 Resume with the same recorded Git revision, configuration, environment, source,
 and output. Completed scans and arm reports are skipped; fitting saves optimizer

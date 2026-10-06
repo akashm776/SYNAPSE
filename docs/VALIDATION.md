@@ -37,4 +37,13 @@ averaging before the outer optimizer step, and exact interrupted fitting resume.
 End-to-end guards check source immutability, A/M-only model inputs, fp32 parameters,
 virtual/real parity, changed-identity rejection, and completed-run no-op resume.
 The independent CLI smoke also runs in CI. These are implementation checks;
-the new diagnostic's A100 outcomes remain pending.
+the completed A100 run showed weight movement but no mean reduction exceeding
+its numerical reference scales.
+
+## Separate auxiliary-strength check
+
+Strength checks cover alpha-grid safety, fixed recipes, native/uniform repeats,
+actual zero-alpha learned-arm equivalence, linear scaling of unclipped auxiliary
+gradients, A/M-only fp32 model inputs, source immutability and exact group-level
+resume. The independent CLI smoke runs in CI. The new strength diagnostic's
+A100 outcomes remain pending; no alpha or recipe is automatically selected.

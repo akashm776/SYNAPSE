@@ -17,3 +17,4 @@ jobs:
       - run: synapse report --config configs/llm_smoke.json --output runs/smoke
       - run: synapse-audit --source runs/smoke --output runs/audit_smoke --config configs/audit_smoke.json
       - run: synapse-learnability --source runs/smoke --output runs/learnability_smoke --config configs/learnability_smoke.json
+      - run: synapse-strength --source runs/smoke --output runs/strength_smoke --config configs/strength_smoke.json
